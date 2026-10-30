@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JUPAS 選科平台</title>
+<style>
+body { font-family: system-ui, -apple-system, sans-serif; background: #f7f3eb; color: #1c1915; margin: 0; padding: 12px; max-width: 420px; margin: 0 auto; }
+.tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+.tab { flex: 1; padding: 10px; text-align: center; background: #e6e1d6; border-radius: 8px; cursor: pointer; }
+.tab.active { background: #1c1915; color: #f7f3eb; }
+.card { background: #f7f3eb; border: 1px solid #e6e1d6; border-radius: 10px; padding: 12px; margin-bottom: 12px; }
+.score { font-size: 28px; font-weight: bold; font-variant-numeric: tabular-nums; }
+.chip { display: inline-block; padding: 4px 10px; margin: 2px; border-radius: 16px; background: #e6e1d6; cursor: pointer; }
+.chip.selected { background: #1c1915; color: #f7f3eb; }
+input, select { width: 100%; padding: 8px; margin: 4px 0; border: 1px solid #e6e1d6; border-radius: 6px; }
+.heart { float: right; font-size: 20px; cursor: pointer; }
+.heart.filled { color: #e11d48; }
+</style>
+</head>
+<body>
+<div class="tabs">
+  <div class="tab active" onclick="show('scores')">成績輸入</div>
+  <div class="tab" onclick="show('courses')">課程</div>
+  <div class="tab" onclick="show('wishlist')">志願排序</div>
+</div>
+<div id="scores">
+  <h2>我的成績</h2>
+  <label>中文 <select id="chi"><option>U</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>5*</option><option>5**</option></select></label>
+  <label>英文 <select id="eng"><option>U</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>5*</option><option>5**</option></select></label>
+  <label>數學 <select id="math"><option>U</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>5*</option><option>5**</option></select></label>
+  <label>公民與社會 <select id="csd"><option>未達</option><option>達標</option></select></label>
+  <label>選修1 <select id="e1"><option value="">不選</option><option>生物</option><option>化學</option><option>物理</option><option>經濟</option></select> <select id="e1g"><option>U</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>5*</option><option>5**</option></select></label>
+  <p style="font-size:12px;color:#6b645b">示範數據已預填，可直接修改。</p>
+</div>
+<div id="courses" style="display:none">
+  <div>
+    <span class="chip" onclick="filterUni('CityU')">CityU</span>
+    <span class="chip" onclick="filterUni('CUHK')">CUHK</span>
+    <span class="chip selected" onclick="filterStatus('all')">全部</span>
+  </div>
+  <div id="course-list"></div>
+</div>
+<div id="wishlist" style="display:none">
+  <h2>志願排序</h2>
+  <div id="wish-list"></div>
+  <p style="font-size:12px;color:#6b645b">前 3 個為 Band A。可上下移動調整次序。</p>
+</div>
+<script>
+const programmes = [
+  {code:"JS1000", uni:"CityU", name:"理學士(計算金融及金融科技)", formula:"Best 5 (包括英文及數學)", median:24.5, lq:23.5, weighting:"--", category:"會計，財務，經濟"},
+  {code:"JS1001", uni:"CityU", name:"工商管理學士(環球商業)", formula:"Best 5", median:29.5, lq:28, weighting:"英文×1.5", category:"工商管理"},
+  {code:"JS1002", uni:"CityU", name:"工商管理學士(會計)", formula:"Best 5 (包括數學)", median:22, lq:21.5, weighting:"--", category:"會計，財務，經濟"},
+  {code:"JS1061", uni:"CityU", name:"法律學學士", formula:"Best 5 (包括英文)", median:23, lq:21.5, weighting:"--", category:"法律，法學"},
+  {code:"JS1204", uni:"CityU", name:"理學士(計算機科學)", formula:"Best 5", median:23, lq:22, weighting:"--", category:"工程及科技"},
+  {code:"JS4501", uni:"CUHK", name:"內外全科醫學士", formula:"6 Graded Subjects", median:"未有", lq:"未有", weighting:"指定科目必須", category:"醫學，治療，護理"},
+  {code:"JS4412", uni:"CUHK", name:"計算機科學及工程學", formula:"Best 5", median:"未有", lq:"未有", weighting:"數學×1.5", category:"工程及科技"}
+];
+let wishlist = [];
+function show(tab) {
+  document.getElementById('scores').style.display = tab==='scores'?'block':'none';
+  document.getElementById('courses').style.display = tab==='courses'?'block':'none';
+  document.getElementById('wishlist').style.display = tab==='wishlist'?'block':'none';
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  if(tab==='courses') renderCourses();
+  if(tab==='wishlist') renderWishlist();
+}
+function renderCourses() {
+  const list = document.getElementById('course-list');
+  list.innerHTML = programmes.map(p => `
+    <div class="card">
+      <span class="heart" onclick="toggleWish('${p.code}')">♡</span>
+      <div><strong>${p.uni}</strong> ${p.code}</div>
+      <div>${p.name}</div>
+      <div style="margin-top:8px"><span class="score">—</span> <small>中位數 ${p.median}</small></div>
+      <div style="font-size:12px;color:#6b645b;margin-top:4px">${p.formula} · ${p.weighting}</div>
+    </div>
+  `).join('');
+}
+function toggleWish(code) {
+  const idx = wishlist.indexOf(code);
+  if(idx>-1) wishlist.splice(idx,1); else wishlist.push(code);
+  renderCourses();
+  if(document.getElementById('wishlist').style.display!=='none') renderWishlist();
+}
+function renderWishlist() {
+  const list = document.getElementById('wish-list');
+  list.innerHTML = wishlist.map((code,i) => {
+    const p = programmes.find(x=>x.code===code);
+    return `<div class="card">${i+1}. ${p.uni} ${p.code} ${p.name} ${i<3?'(Band A)':''}</div>`;
+  }).join('') || '<p>尚未加入課程</p>';
+}
+document.getElementById('chi').value='5';
+document.getElementById('eng').value='4';
+document.getElementById('math').value='5*';
+</script>
+</body>
+</html>
