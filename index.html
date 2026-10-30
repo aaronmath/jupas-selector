@@ -3,112 +3,218 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JUPAS 選科平台</title>
+<title>大學聯招 2027/28</title>
 <style>
-body { font-family: system-ui, -apple-system, sans-serif; background: #f7f3eb; color: #1c1915; margin: 0; padding: 12px; max-width: 420px; margin: 0 auto; }
-.tabs { display: flex; gap: 8px; margin-bottom: 16px; }
-.tab { flex: 1; padding: 10px; text-align: center; background: #e6e1d6; border-radius: 8px; cursor: pointer; }
-.tab.active { background: #1c1915; color: #f7f3eb; }
-.card { background: #f7f3eb; border: 1px solid #e6e1d6; border-radius: 10px; padding: 12px; margin-bottom: 12px; }
-.score { font-size: 28px; font-weight: bold; font-variant-numeric: tabular-nums; }
-.chip { display: inline-block; padding: 4px 10px; margin: 2px; border-radius: 16px; background: #e6e1d6; cursor: pointer; }
-.chip.selected { background: #1c1915; color: #f7f3eb; }
-input, select { width: 100%; padding: 8px; margin: 4px 0; border: 1px solid #e6e1d6; border-radius: 6px; }
-.heart { float: right; font-size: 20px; cursor: pointer; }
-.heart.filled { color: #e11d48; }
+:root { --bg:#f7f3eb; --card:#f7f3eb; --ink:#1c1915; --muted:#6b645b; --line:#e6e1d6; --accent:#1c1915; }
+* { box-sizing: border-box; }
+body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--ink); margin: 0; padding: 12px; max-width: 440px; margin: 0 auto; }
+.header { text-align: center; margin-bottom: 8px; position: relative; }
+.header h1 { margin: 0; font-size: 20px; }
+.lang { position: absolute; top: 0; right: 0; font-size: 13px; }
+.disclaimer { font-size: 11px; color: var(--muted); text-align: center; margin: 4px 0 12px; line-height: 1.4; }
+.tabs { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+.tab { flex: 1; min-width: 70px; padding: 8px 4px; text-align: center; background: #e6e1d6; border-radius: 8px; cursor: pointer; font-size: 13px; }
+.tab.active { background: var(--accent); color: #fff; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px; margin-bottom: 10px; position: relative; }
+.score { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.chip { display: inline-block; padding: 4px 10px; margin: 2px; border-radius: 16px; background: #e6e1d6; cursor: pointer; font-size: 12px; }
+.chip.selected { background: var(--accent); color: #fff; }
+.grade-btn { display: inline-block; padding: 6px 8px; margin: 2px; border: 1px solid var(--line); border-radius: 6px; cursor: pointer; font-size: 13px; }
+.grade-btn.selected { background: var(--accent); color: #fff; }
+.heart { float: right; font-size: 18px; cursor: pointer; }
+.heart.on { color: #e11d48; }
+.band-A { background: #fde8e8; }
+.band-B { background: #fff3e0; }
+.band-C { background: #fffde7; }
+.band-D { background: #e8f5e9; }
+.band-E { background: #e3f2fd; }
+.filters { margin-bottom: 8px; }
+small, .muted { color: var(--muted); font-size: 12px; }
+.modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 100; align-items: center; justify-content: center; }
+.modal.open { display: flex; }
+.modal-content { background: #fff; padding: 16px; border-radius: 10px; max-width: 90%; max-height: 80%; overflow: auto; }
 </style>
 </head>
 <body>
+<div class="header">
+  <div class="lang"><span onclick="setLang('zh')" style="cursor:pointer">中</span> | <span onclick="setLang('en')" style="cursor:pointer">EN</span></div>
+  <h1>大學聯招 2027/28</h1>
+</div>
+<div class="disclaimer">本頁數據僅供參考。實際計分方法、科目比重及收生分數以各院校官方網頁最新公布為準。過往收生中位數及下四分位數只反映該年情況，並不代表來年收生水平。2027-28 新課程標「新」。</div>
+
 <div class="tabs">
   <div class="tab active" onclick="show('scores')">成績輸入</div>
   <div class="tab" onclick="show('courses')">課程</div>
   <div class="tab" onclick="show('wishlist')">志願排序</div>
+  <div class="tab" onclick="show('compare')">比較</div>
 </div>
+
 <div id="scores">
-  <h2>我的成績</h2>
-  <label>中文 <select id="chi"><option>U</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>5*</option><option>5**</option></select></label>
-  <label>英文 <select id="eng"><option>U</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>5*</option><option>5**</option></select></label>
-  <label>數學 <select id="math"><option>U</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>5*</option><option>5**</option></select></label>
-  <label>公民與社會 <select id="csd"><option>未達</option><option>達標</option></select></label>
-  <label>選修1 <select id="e1"><option value="">不選</option><option>生物</option><option>化學</option><option>物理</option><option>經濟</option></select> <select id="e1g"><option>U</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>5*</option><option>5**</option></select></label>
-  <p style="font-size:12px;color:#6b645b">示範數據已預填，可直接修改。</p>
+  <div id="grade-inputs"></div>
+  <p class="muted">等級由高至低。資料儲存於本裝置。</p>
 </div>
+
 <div id="courses" style="display:none">
-  <div id="uni-filters">
-    <span class="chip" data-uni="CityU" onclick="filterUni('CityU')">CityU</span>
-    <span class="chip" data-uni="CUHK" onclick="filterUni('CUHK')">CUHK</span>
-    <span class="chip selected" data-uni="all" onclick="filterUni('all')">全部</span>
-  </div>
+  <div class="filters" id="uni-filters"></div>
+  <div class="filters" id="cat-filters"></div>
   <div id="course-list"></div>
 </div>
+
 <div id="wishlist" style="display:none">
-  <h2>志願排序</h2>
   <div id="wish-list"></div>
-  <p style="font-size:12px;color:#6b645b">前 3 個為 Band A。可上下移動調整次序。</p>
+  <p class="muted">前 3 個為 Band A。可上下移動。淺色底區分 Band。</p>
 </div>
+
+<div id="compare" style="display:none">
+  <div id="compare-list"></div>
+  <p class="muted">從收藏中最多比較 5 個課程。</p>
+</div>
+
+<div class="modal" id="intro-modal"><div class="modal-content"><span onclick="closeModal()" style="float:right;cursor:pointer">✕</span><div id="modal-body"></div></div></div>
+
 <script>
-const programmes = [
-  {code:"JS1000", uni:"CityU", name:"理學士(計算金融及金融科技)", formula:"Best 5 (包括英文及數學)", median:24.5, lq:23.5, weighting:"--", category:"會計，財務，經濟"},
-  {code:"JS1001", uni:"CityU", name:"工商管理學士(環球商業)", formula:"Best 5", median:29.5, lq:28, weighting:"英文×1.5", category:"工商管理"},
-  {code:"JS1002", uni:"CityU", name:"工商管理學士(會計)", formula:"Best 5 (包括數學)", median:22, lq:21.5, weighting:"--", category:"會計，財務，經濟"},
-  {code:"JS1061", uni:"CityU", name:"法律學學士", formula:"Best 5 (包括英文)", median:23, lq:21.5, weighting:"--", category:"法律，法學"},
-  {code:"JS1204", uni:"CityU", name:"理學士(計算機科學)", formula:"Best 5", median:23, lq:22, weighting:"--", category:"工程及科技"},
-  {code:"JS4501", uni:"CUHK", name:"內外全科醫學士", formula:"6 Graded Subjects", median:"未有", lq:"未有", weighting:"指定科目必須", category:"醫學，治療，護理"},
-  {code:"JS4412", uni:"CUHK", name:"計算機科學及工程學", formula:"Best 5", median:"未有", lq:"未有", weighting:"數學×1.5", category:"工程及科技"}
+const GRADES = ["5**","5*","5","4","3","2","1","U"];
+const SUBJECTS = [
+  {id:"chi", name:"中文", en:"Chinese"},
+  {id:"eng", name:"英文", en:"English"},
+  {id:"math", name:"數學", en:"Mathematics"},
+  {id:"csd", name:"公民與社會", en:"Citizenship & Social Development"},
+  {id:"e1", name:"選修1", en:"Elective 1"},
+  {id:"e2", name:"選修2", en:"Elective 2"},
+  {id:"e3", name:"選修3", en:"Elective 3"},
+  {id:"m1", name:"M1/M2", en:"M1/M2"}
 ];
-let wishlist = [];
-let currentUniFilter = 'all';
+const CATEGORIES = ["工商管理","工程及科技","文科及人文學科","地理，測繪","法律，法學","社會科學，心理學","建築，建造，城市規劃","科學","旅遊及款待服務","教育，師資訓練","傳播，新聞，公共關係","會計，財務，經濟","運動，體育，康樂","運輸及物流","語言，文學，翻譯","數學，精算","醫學，治療，護理","藝術，設計，創意媒體"];
+const UNIS = ["CityU","CUHK","HKU","HKUST","PolyU","HKBU","LU","EdUHK","HKMU","HSUHK","SYU","TWC","CIHE"];
+
+const programmes = [
+  {code:"JS1000", uni:"CityU", name:"理學士(計算金融及金融科技)", nameEn:"BSc Computational Finance and Financial Technology", formula:"Best 5 (包括英文及數學)", median:24.5, lq:23.5, weighting:"--", category:"會計，財務，經濟", intake:10, interview:false, isNew:false, intro:"專修計算金融或金融科技。"},
+  {code:"JS1001", uni:"CityU", name:"工商管理學士(環球商業)", nameEn:"BBA Global Business", formula:"Best 5", median:29.5, lq:28, weighting:"英文×1.5", category:"工商管理", intake:15, interview:false, isNew:false, intro:"包含海外交流及雙聯學位機會。"},
+  {code:"JS1002", uni:"CityU", name:"工商管理學士(會計)", nameEn:"BBA Accountancy", formula:"Best 5 (包括數學)", median:22, lq:21.5, weighting:"--", category:"會計，財務，經濟", intake:148, interview:false, isNew:false, intro:"專業會計專修。"},
+  {code:"JS1061", uni:"CityU", name:"法律學學士", nameEn:"LLB", formula:"Best 5 (包括英文)", median:23, lq:21.5, weighting:"--", category:"法律，法學", intake:42, interview:true, isNew:false, intro:"法律學學士課程。"},
+  {code:"JS1204", uni:"CityU", name:"理學士(計算機科學)", nameEn:"BSc Computer Science", formula:"Best 5", median:23, lq:22, weighting:"--", category:"工程及科技", intake:89, interview:false, isNew:false, intro:"人工智能、網絡安全等專修。"},
+  {code:"JS4501", uni:"CUHK", name:"內外全科醫學士", nameEn:"MBChB", formula:"6 Graded Subjects", median:"未有", lq:"未有", weighting:"指定科目必須", category:"醫學，治療，護理", intake:30, interview:true, isNew:false, intro:"醫學課程，需面試。"},
+  {code:"JS4412", uni:"CUHK", name:"計算機科學及工程學", nameEn:"Computer Science and Engineering", formula:"Best 5", median:"未有", lq:"未有", weighting:"數學×1.5", category:"工程及科技", intake:80, interview:false, isNew:false, intro:"計算機科學及工程。"},
+  {code:"JS7100", uni:"HKMU", name:"工商管理學士（榮譽）", nameEn:"BBA (Hons)", formula:"Best 5", median:"未有", lq:"未有", weighting:"--", category:"工商管理", intake:100, interview:false, isNew:false, intro:"都會大學自資工商管理課程。"},
+  {code:"JS8010", uni:"HSUHK", name:"工商管理（榮譽）學士", nameEn:"BBA (Hons)", formula:"Best 5", median:"未有", lq:"未有", weighting:"英文×1.25", category:"工商管理", intake:60, interview:false, isNew:false, intro:"恒生大學工商管理。"},
+  {code:"JS9001", uni:"SYU", name:"文學士（榮譽）中國語言及文學", nameEn:"BA (Hons) Chinese Language and Literature", formula:"Best 5", median:"未有", lq:"未有", weighting:"中文×1.5", category:"語言，文學，翻譯", intake:40, interview:false, isNew:false, intro:"樹仁大學中文課程。"},
+  {code:"JS1050", uni:"CityU", name:"環球可持續發展科創課程", nameEn:"Global Sustainability Science and Innovation", formula:"Best 5", median:38, lq:36.5, weighting:"英文×2 數學×2.5", category:"科學", intake:10, interview:false, isNew:true, intro:"2027-28 新課程示例。"}
+];
+
+let state = JSON.parse(localStorage.getItem("jupas-state") || '{"grades":{},"wishlist":[],"lang":"zh"}');
+if (!state.grades) state.grades = {};
+if (!state.wishlist) state.wishlist = [];
+
+function save() { localStorage.setItem("jupas-state", JSON.stringify(state)); }
+
+function setLang(l) { state.lang = l; save(); renderAll(); }
 
 function show(tab) {
-  document.getElementById('scores').style.display = tab==='scores'?'block':'none';
-  document.getElementById('courses').style.display = tab==='courses'?'block':'none';
-  document.getElementById('wishlist').style.display = tab==='wishlist'?'block':'none';
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  event.target.classList.add('active');
-  if(tab==='courses') renderCourses();
-  if(tab==='wishlist') renderWishlist();
+  ["scores","courses","wishlist","compare"].forEach(t => document.getElementById(t).style.display = t===tab ? "block" : "none");
+  document.querySelectorAll(".tab").forEach(el => el.classList.remove("active"));
+  event.target.classList.add("active");
+  if (tab==="courses") renderCourses();
+  if (tab==="wishlist") renderWishlist();
+  if (tab==="compare") renderCompare();
 }
 
-function filterUni(uni) {
-  currentUniFilter = uni;
-  document.querySelectorAll('#uni-filters .chip').forEach(c => {
-    c.classList.toggle('selected', c.dataset.uni === uni);
-  });
-  renderCourses();
+function renderGrades() {
+  const el = document.getElementById("grade-inputs");
+  el.innerHTML = SUBJECTS.map(s => `
+    <div style="margin-bottom:8px">
+      <div>${state.lang==="zh"?s.name:s.en}</div>
+      <div>${GRADES.map(g => `<span class="grade-btn ${state.grades[s.id]===g?"selected":""}" onclick="setGrade('${s.id}','${g}')">${g}</span>`).join("")}</div>
+    </div>
+  `).join("");
 }
+
+function setGrade(id, g) { state.grades[id] = g; save(); renderGrades(); }
+
+function renderFilters() {
+  document.getElementById("uni-filters").innerHTML = ["全部",...UNIS].map(u => `<span class="chip ${(!state.uniFilter&&u==="全部")||state.uniFilter===u?"selected":""}" onclick="filterUni('${u==="全部"?"":u}')">${u}</span>`).join("");
+  document.getElementById("cat-filters").innerHTML = ["全部",...CATEGORIES].map(c => `<span class="chip ${(!state.catFilter&&c==="全部")||state.catFilter===c?"selected":""}" onclick="filterCat('${c==="全部"?"":c}')">${c}</span>`).join("");
+}
+
+function filterUni(u) { state.uniFilter = u; save(); renderCourses(); }
+function filterCat(c) { state.catFilter = c; save(); renderCourses(); }
 
 function renderCourses() {
-  const list = document.getElementById('course-list');
-  const filtered = programmes.filter(p => currentUniFilter === 'all' || p.uni === currentUniFilter);
-  list.innerHTML = filtered.map(p => `
-    <div class="card">
-      <span class="heart" onclick="toggleWish('${p.code}')">♡</span>
-      <div><strong>${p.uni}</strong> ${p.code}</div>
-      <div>${p.name}</div>
-      <div style="margin-top:8px"><span class="score">—</span> <small>中位數 ${p.median}</small></div>
-      <div style="font-size:12px;color:#6b645b;margin-top:4px">${p.formula} · ${p.weighting}</div>
-    </div>
-  `).join('');
+  renderFilters();
+  const list = document.getElementById("course-list");
+  let filtered = programmes;
+  if (state.uniFilter) filtered = filtered.filter(p => p.uni === state.uniFilter);
+  if (state.catFilter) filtered = filtered.filter(p => p.category === state.catFilter);
+  list.innerHTML = filtered.map(p => {
+    const fav = state.wishlist.includes(p.code);
+    const name = state.lang==="zh" ? p.name : p.nameEn;
+    return `<div class="card">
+      <span class="heart ${fav?"on":""}" onclick="toggleWish('${p.code}')">${fav?"♥":"♡"}</span>
+      <div><strong>${p.uni}</strong> ${p.code} ${p.isNew?"<span style='color:#e11d48;font-size:11px'>新</span>":""}</div>
+      <div>${name}</div>
+      <div style="margin:6px 0"><span class="score">—</span> <small>中位數 ${p.median} / LQ ${p.lq}</small></div>
+      <div class="muted">${p.formula} · ${p.weighting}</div>
+      <div class="muted">收生 ${p.intake} · ${p.interview?"需面試":"一般無需面試"} · ${p.category}</div>
+      <div style="margin-top:6px"><span class="chip" onclick="showIntro('${p.code}')">簡介</span></div>
+    </div>`;
+  }).join("");
 }
 
 function toggleWish(code) {
-  const idx = wishlist.indexOf(code);
-  if(idx>-1) wishlist.splice(idx,1); else wishlist.push(code);
-  renderCourses();
-  if(document.getElementById('wishlist').style.display!=='none') renderWishlist();
+  const i = state.wishlist.indexOf(code);
+  if (i>-1) state.wishlist.splice(i,1); else if (state.wishlist.length<20) state.wishlist.push(code);
+  save(); renderCourses();
 }
 
 function renderWishlist() {
-  const list = document.getElementById('wish-list');
-  list.innerHTML = wishlist.map((code,i) => {
+  const list = document.getElementById("wish-list");
+  list.innerHTML = state.wishlist.map((code,i) => {
     const p = programmes.find(x=>x.code===code);
-    return `<div class="card">${i+1}. ${p.uni} ${p.code} ${p.name} ${i<3?'(Band A)':''}</div>`;
-  }).join('') || '<p>尚未加入課程</p>';
+    const band = i<3?"A":i<6?"B":i<10?"C":i<15?"D":"E";
+    return `<div class="card band-${band}">
+      <div>${i+1}. <strong>${p.uni}</strong> ${p.code} ${state.lang==="zh"?p.name:p.nameEn} (Band ${band})</div>
+      <div style="margin-top:4px">
+        <span class="chip" onclick="moveWish(${i},-1)">↑</span>
+        <span class="chip" onclick="moveWish(${i},1)">↓</span>
+      </div>
+    </div>`;
+  }).join("") || "<p class='muted'>尚未加入課程</p>";
 }
 
-document.getElementById('chi').value='5';
-document.getElementById('eng').value='4';
-document.getElementById('math').value='5*';
+function moveWish(i, dir) {
+  const j = i + dir;
+  if (j<0 || j>=state.wishlist.length) return;
+  [state.wishlist[i], state.wishlist[j]] = [state.wishlist[j], state.wishlist[i]];
+  save(); renderWishlist();
+}
+
+function renderCompare() {
+  const list = document.getElementById("compare-list");
+  const items = state.wishlist.slice(0,5).map(code => programmes.find(p=>p.code===code)).filter(Boolean);
+  list.innerHTML = items.length ? items.map(p => `
+    <div class="card">
+      <div><strong>${p.uni}</strong> ${p.code}</div>
+      <div>${state.lang==="zh"?p.name:p.nameEn}</div>
+      <div>中位數 ${p.median} / LQ ${p.lq}</div>
+      <div class="muted">${p.formula}</div>
+      <div class="muted">${p.interview?"需面試":"一般無需面試"} · 收生 ${p.intake}</div>
+    </div>
+  `).join("") : "<p class='muted'>請先收藏課程</p>";
+}
+
+function showIntro(code) {
+  const p = programmes.find(x=>x.code===code);
+  document.getElementById("modal-body").innerHTML = `<h3>${p.name}</h3><p>${p.intro}</p><p class="muted">${p.uni} · ${p.category}</p>`;
+  document.getElementById("intro-modal").classList.add("open");
+}
+function closeModal() { document.getElementById("intro-modal").classList.remove("open"); }
+
+function renderAll() {
+  renderGrades();
+  if (document.getElementById("courses").style.display!=="none") renderCourses();
+  if (document.getElementById("wishlist").style.display!=="none") renderWishlist();
+  if (document.getElementById("compare").style.display!=="none") renderCompare();
+}
+renderAll();
 </script>
 </body>
 </html>
