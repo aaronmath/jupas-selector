@@ -34,10 +34,10 @@ input, select { width: 100%; padding: 8px; margin: 4px 0; border: 1px solid #e6e
   <p style="font-size:12px;color:#6b645b">示範數據已預填，可直接修改。</p>
 </div>
 <div id="courses" style="display:none">
-  <div>
-    <span class="chip" onclick="filterUni('CityU')">CityU</span>
-    <span class="chip" onclick="filterUni('CUHK')">CUHK</span>
-    <span class="chip selected" onclick="filterStatus('all')">全部</span>
+  <div id="uni-filters">
+    <span class="chip" data-uni="CityU" onclick="filterUni('CityU')">CityU</span>
+    <span class="chip" data-uni="CUHK" onclick="filterUni('CUHK')">CUHK</span>
+    <span class="chip selected" data-uni="all" onclick="filterUni('all')">全部</span>
   </div>
   <div id="course-list"></div>
 </div>
@@ -57,6 +57,8 @@ const programmes = [
   {code:"JS4412", uni:"CUHK", name:"計算機科學及工程學", formula:"Best 5", median:"未有", lq:"未有", weighting:"數學×1.5", category:"工程及科技"}
 ];
 let wishlist = [];
+let currentUniFilter = 'all';
+
 function show(tab) {
   document.getElementById('scores').style.display = tab==='scores'?'block':'none';
   document.getElementById('courses').style.display = tab==='courses'?'block':'none';
@@ -66,9 +68,19 @@ function show(tab) {
   if(tab==='courses') renderCourses();
   if(tab==='wishlist') renderWishlist();
 }
+
+function filterUni(uni) {
+  currentUniFilter = uni;
+  document.querySelectorAll('#uni-filters .chip').forEach(c => {
+    c.classList.toggle('selected', c.dataset.uni === uni);
+  });
+  renderCourses();
+}
+
 function renderCourses() {
   const list = document.getElementById('course-list');
-  list.innerHTML = programmes.map(p => `
+  const filtered = programmes.filter(p => currentUniFilter === 'all' || p.uni === currentUniFilter);
+  list.innerHTML = filtered.map(p => `
     <div class="card">
       <span class="heart" onclick="toggleWish('${p.code}')">♡</span>
       <div><strong>${p.uni}</strong> ${p.code}</div>
@@ -78,12 +90,14 @@ function renderCourses() {
     </div>
   `).join('');
 }
+
 function toggleWish(code) {
   const idx = wishlist.indexOf(code);
   if(idx>-1) wishlist.splice(idx,1); else wishlist.push(code);
   renderCourses();
   if(document.getElementById('wishlist').style.display!=='none') renderWishlist();
 }
+
 function renderWishlist() {
   const list = document.getElementById('wish-list');
   list.innerHTML = wishlist.map((code,i) => {
@@ -91,6 +105,7 @@ function renderWishlist() {
     return `<div class="card">${i+1}. ${p.uni} ${p.code} ${p.name} ${i<3?'(Band A)':''}</div>`;
   }).join('') || '<p>尚未加入課程</p>';
 }
+
 document.getElementById('chi').value='5';
 document.getElementById('eng').value='4';
 document.getElementById('math').value='5*';
