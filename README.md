@@ -1,2 +1,13 @@
-# jupas-selector
-JUPAS 選科平台 - CityU &amp; CUHK sample
+# JUPAS 選科
+
+學生版網址：https://aaronmath.github.io/jupas-selector/
+
+## 點樣開
+
+1. 用手機或電腦瀏覽器開上面條 link。
+2. 先入成績，再去「課程」篩院校同學習領域。
+3. 心形會加入「志願排序」，最多 20 個，次序自己排。
+
+成績只儲存在你自己部機，唔會上傳。
+
+資料收錄 2027/28 經聯招招生的課程（資助大學及該年自資學位）。沒有公開收生分的課程顯示「未有」，不會估算。原始課程表在 `data/programmes.json`。
